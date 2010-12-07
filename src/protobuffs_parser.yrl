@@ -82,6 +82,8 @@ g_var -> service : service.
 g_var -> rpc : rpc.
 g_var -> returns : returns.
 
+% TODO: probably don't want to ignore these warnings
+Expect 22.
 
 Erlang code.
 safe_string(A) -> make_safe(atom_to_list(A)).
