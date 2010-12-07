@@ -230,6 +230,12 @@ parse_packed_repeated_test_() ->
      ?_assertMatch({1,required,"string","region",number,none},lists:keyfind(1,1,Location)),
      ?_assertMatch({2,required,"string","country",number,none},lists:keyfind(2,1,Location))].
 
+parse_single_test() ->
+    Path = filename:absname("../test/erlang_protobuffs_SUITE_data/single.proto"),
+    [{message, "message", Messages}] = parse (Path),
+    [?_assertMatch({1,required,"uint32","s",number,none},lists:keyfind(1,1,Messages))].
+
+
 %%--------------------------------------------------------------------
 %% Help functions
 %%--------------------------------------------------------------------

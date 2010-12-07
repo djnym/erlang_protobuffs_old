@@ -349,3 +349,14 @@ prop_protobuffs_special_words() ->
 		Decoded = special_words_pb:decode_message(special_words_pb:encode_message(SpecialWords)),
 		compare_messages(SpecialWords,Decoded)
 	    end).
+
+single() ->
+  {message, uint32()}.
+
+prop_protobuffs_single() ->
+  ?FORALL({Single},
+          {single()},
+          begin
+            Decoded = single_pb:decode_message (single_pb:encode_message(Single)),
+            compare_messages (Single, Decoded)
+          end).
