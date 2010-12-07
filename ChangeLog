@@ -10,4 +10,8 @@ riak-erlang-client
 - Nested types should now work according to spec (as much as there is one)
 - Fixed bool defaults, they were being improperly scanned, so falling back to
   keywords
-
+* freke <davabe@hotmail.com>
+- Fixed enum support
+- Changed build system to Rake
+- Added QuickCheck tests
+- Changed so parsing of proto files is done by leex and yecc
