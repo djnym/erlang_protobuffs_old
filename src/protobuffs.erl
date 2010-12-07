@@ -25,7 +25,9 @@
 %%
 %% @doc A protcol buffers encoding and decoding module.
 -module(protobuffs).
--export([encode/3, encode_packed/3, next_field_num/1, decode/2, decode_packed/2]).
+-export([encode/3, encode_packed/3, read_field_num_and_wire_type/1,
+         next_field_num/1, decode/2, decode_packed/2,
+         decode_value/3]).
 
 -define(TYPE_VARINT, 0).
 -define(TYPE_64BIT, 1).
@@ -126,7 +128,6 @@ encode_packed_internal([Integer|Tail], ExpectedType, Acc) ->
     [_|Value] = encode_internal(1, Integer, ExpectedType),
     encode_packed_internal(Tail, ExpectedType, [Value|Acc]).
 
-%% @hidden
 read_field_num_and_wire_type(Bytes) ->
     {Tag, Rest} = decode_varint(Bytes),
     FieldID = Tag bsr 3,
