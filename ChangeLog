@@ -1,3 +1,7 @@
+* Thu Jan 06 2011 Anthony Molinaro <anthony.molinaro@openx.org> 0.0.2
+- merge some change that basho made, so I can hopefully use this with
+riak-erlang-client
+
 * Thu Dec 03 2009 Anthony Molinaro <anthony.molinaro@openx.org> 0.0.1
 - Fixed path for unit tests
 - Have .gitignore ignore all generated files

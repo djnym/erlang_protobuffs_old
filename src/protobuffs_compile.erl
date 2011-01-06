@@ -88,16 +88,19 @@ filter_forms(Msgs, [{attribute,L,record,{pikachu,_}}|Tail], Basename, Acc) ->
 
 filter_forms(Msgs, [{function,L,encode_pikachu,1,[Clause]}|Tail], Basename, Acc) ->
     Functions = [begin
-        {function,L,list_to_atom("encode_" ++ string:to_lower(Name)),1,[replace_atom(Clause, pikachu, atomize(Name))]} 
+        {function,L,list_to_atom("encode_" ++ string:to_lower(Name)),1,[replace_atom(Clause, pikachu, atomize(Name))]}
     end || {Name, _} <- Msgs],
     filter_forms(Msgs, Tail, Basename, Functions ++ Acc);
 
 filter_forms(Msgs, [{function,L,encode,2,[Clause]}|Tail], Basename, Acc) ->
     filter_forms(Msgs, Tail, Basename, [expand_encode_function(Msgs, L, Clause)|Acc]);
 
+filter_forms(Msgs, [{function,L,iolist,2,[Clause]}|Tail], Basename, Acc) ->
+    filter_forms(Msgs, Tail, Basename, [expand_iolist_function(Msgs, L, Clause)|Acc]);
+
 filter_forms(Msgs, [{function,L,decode_pikachu,1,[Clause]}|Tail], Basename, Acc) ->
     Functions = [begin
-        {function,L,list_to_atom("decode_" ++ string:to_lower(Name)),1,[replace_atom(Clause, pikachu, atomize(Name))]} 
+        {function,L,list_to_atom("decode_" ++ string:to_lower(Name)),1,[replace_atom(Clause, pikachu, atomize(Name))]}
     end || {Name, _} <- Msgs],
     filter_forms(Msgs, Tail, Basename, Functions ++ Acc);
 
@@ -115,7 +118,16 @@ filter_forms(_, [], _, Acc) -> lists:reverse(Acc).
 expand_encode_function(Msgs, Line, Clause) ->
     {function,Line,encode,2,[filter_encode_clause(Msg, Clause) || Msg <- Msgs]}.
 
-filter_encode_clause({MsgName, Fields}, {clause,L,_Args,Guards,_Content}) ->
+filter_encode_clause({MsgName, _Fields}, {clause,L,_Args,Guards,_Content}) ->
+    ToBin = {call,L,{atom,L,iolist_to_binary},[{call,L,
+                                                {atom,L,iolist},
+                                                [{atom,L,atomize(MsgName)},{var,L,'Record'}]}]},
+    {clause,L,[{atom,L,atomize(MsgName)},{var,L,'Record'}],Guards,[ToBin]}.
+
+expand_iolist_function(Msgs, Line, Clause) ->
+    {function,Line,iolist,2,[filter_iolist_clause(Msg, Clause) || Msg <- Msgs]}.
+
+filter_iolist_clause({MsgName, Fields}, {clause,L,_Args,Guards,_Content}) ->
     Cons = lists:foldl(
         fun({FNum,Tag,SType,SName,_,Default}, Acc) ->
             {cons,L,
@@ -127,8 +139,7 @@ filter_encode_clause({MsgName, Fields}, {clause,L,_Args,Guards,_Content}) ->
                     {nil,L}]},
                 Acc}
         end, {nil,L}, Fields),
-    ToBin = {call,L,{atom,L,iolist_to_binary},[Cons]},
-    {clause,L,[{atom,L,atomize(MsgName)},{var,L,'Record'}],Guards,[ToBin]}.
+    {clause,L,[{atom,L,atomize(MsgName)},{var,L,'Record'}],Guards,[Cons]}.
 
 expand_decode_function(Msgs, Line, Clause) ->
     {function,Line,decode,2,[filter_decode_clause(Msgs, Msg, Clause) || Msg <- Msgs]}.
@@ -193,7 +204,10 @@ collect_full_messages([{package, _Line1},
                        {bareword, _Line2, _PackageName},
                        {';', _Line3} | Tail], Acc) ->
     collect_full_messages(Tail, Acc);
-collect_full_messages([], Acc) -> 
+%% Skip anything we don't understand
+collect_full_messages([_|Tail], Acc) ->
+  collect_full_messages(Tail, Acc);
+collect_full_messages([], Acc) ->
     Acc.
 
 resolve_types (Data) -> resolve_types (Data, Data, []).
